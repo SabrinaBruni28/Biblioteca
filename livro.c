@@ -5,13 +5,13 @@ int Inicializa(Arquivos* arquivo){
     arquivo->genero = fopen(GENERO, "a+");
     arquivo->livro = fopen(LIVRO, "a+");
     if(arquivo->autor == NULL || arquivo->genero == NULL || arquivo->livro == NULL){
-        printf("\033[1;31m**** FALHA AO ABRIR ARQUIVO ****\n\033[m");
-        return 0;
+        printf("\n\033[1;31m**** FALHA AO ABRIR ARQUIVO ****\n\033[m");
+        return 1;
     }
     fflush(arquivo->autor);
     fflush(arquivo->genero);
     fflush(arquivo->livro);
-    return 1;
+    return 0;
 }
 
 int Termina(Arquivos* arquivo){
@@ -25,20 +25,40 @@ int Adiciona_Livro(Arquivos* arquivo){
     char gen[MAX];
     char aut[MAX];
     getchar();
-    printf("Digite o nome do livro: ");
+    printf("\033[1mDigite o nome do livro: \033[m");
     fgets(liv, MAX, stdin);
-    Insere(arquivo->livro, liv);
-    printf("Digite o autor: ");
-    fgets(aut, MAX, stdin);
-    Insere(arquivo->autor, aut);
-    printf("Digite o genero: ");
-    fgets(gen, MAX, stdin);
-    Insere(arquivo->genero, gen);
+    if(!Existe_Livro(arquivo, liv)){
+        Insere(arquivo->livro, liv);
+        printf("\033[1mDigite o autor: \033[m");
+        fgets(aut, MAX, stdin);
+        Insere(arquivo->autor, aut);
+        printf("\033[1mDigite o genero: \033[m");
+        fgets(gen, MAX, stdin);
+        Insere(arquivo->genero, gen);
+        return 1;
+    }
+    printf("\n\033[1;34m**** LIVRO RECONHECIDO ****\n\033[m");
+    return 0;
 }
 
 void Insere(FILE* arquivo, char* string){
     fprintf(arquivo, "%s", string); 				  
 }
+
+
+int Existe_Livro(Arquivos* arquivo, char* livro){
+    char string[MAX];
+    int numero = 0;
+    while(!feof(arquivo->livro)){
+        numero++;
+        fgets(string, MAX, arquivo->livro);
+        if(!feof(arquivo->livro) && strcmp(Toupper_Vetor(string, strlen(string)), Toupper_Vetor(livro, strlen(livro))) == 0){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 char* Toupper_Vetor(char* string, int tam){
     int i;
@@ -57,116 +77,131 @@ void Elinima_Final(char*  vetor){
             vetor[i]='\0';
 }
 
-void Zera_string(char* string){
-    int i;
-    for(i=0; i<MAX; i++)
-        string[i] = '\0';
-}
-
 int pesquisa_titulo(Arquivos* arquivo){
     char string[MAX];
     char nome[MAX];
     getchar();
-    printf("Digite o titulo: ");
+    printf("\033[1mDigite o titulo: \033[m");
     fgets(nome, MAX, stdin);
     fflush(arquivo->livro);
     int numero = 0;
-    while(feof(arquivo->livro) == 0){
+    while(!feof(arquivo->livro)){
         numero++;
         fgets(string, MAX, arquivo->livro);
         if(!feof(arquivo->livro) && strcmp(Toupper_Vetor(string, strlen(string)), Toupper_Vetor(nome, strlen(nome))) == 0){
-            printf("Livro encontrado\n");
+            printf("\n\033[1;32m******* Livro encontrado *******\033[m\n");
+            printf("\n");
             Imprime_Autor(arquivo->autor, numero);
             Imprime_Genero(arquivo->genero, numero);
             return 1;
         }
     }
-    printf("Nao encontrado\n");
+    printf("\n\033[1;31m*** Nao encontrado ***\033[m\n");
     return 0;
 }
 int pesquisa_autor(Arquivos* arquivo){
     char string[MAX];
     char aut[MAX];
     getchar();
-    printf("Digite o autor: ");
+    printf("\033[1mDigite o autor: \033[m");
     fgets(aut, MAX, stdin);
     fflush(arquivo->autor);
     int numero = 0;
-    while(feof(arquivo->autor) == 0){
+    int cont = 0;
+    while(!feof(arquivo->autor)){
         numero++;
         fgets(string, MAX, arquivo->autor);
         if(!feof(arquivo->autor) && strcmp(Toupper_Vetor(string, strlen(string)), Toupper_Vetor(aut, strlen(aut))) == 0){
-            printf("Autor encontrado\n");
+            if(cont==0) printf("\n\033[1;32m******* Autor encontrado *******\033[m\n");
+            printf("\n");
             Imprime_Livro(arquivo->livro, numero);
             Imprime_Genero(arquivo->genero, numero);
+            numero = 0;
+            cont++;
         }
     }
-    if(numero != 0) return 1;
-    printf("Nao encontrado\n");
+    if(cont != 0) return 1;
+    printf("\n\033[1;31m*** Nao encontrado ***\033[m\n");
     return 0;
 }
 int pesquisa_genero(Arquivos* arquivo){
     char string[MAX];
     char gen[MAX];
     getchar();
-    printf("Digite o genero: ");
+    printf("\033[1mDigite o genero: \033[m");
     fgets(gen, MAX, stdin);
     fflush(arquivo->genero);
     int numero = 0;
-    while(feof(arquivo->genero) == 0){
+    int cont = 0;
+    while(!feof(arquivo->genero)){
         numero++;
         fgets(string, MAX, arquivo->genero);
         if(!feof(arquivo->genero) && strcmp(Toupper_Vetor(string, strlen(string)), Toupper_Vetor(gen, strlen(gen))) == 0){
-            printf("******* Genero encontrado ******\n");
+            if(cont == 0) printf("\n\033[1;32m******* Genero encontrado *******\033[m\n");
+            printf("\n");
             Imprime_Livro(arquivo->livro, numero);
             Imprime_Autor(arquivo->autor, numero);
+            numero = 0;
+            cont++;
         }
     }
-    if(numero != 0) return 1;
-    printf("*** Nao encontrado ***\n");
+    if(cont != 0) return 1;
+    printf("\n\033[1;31m*** Nao encontrado ***\033[m\n");
     return 0;
 }
 
 void Imprime_Completo(FILE* arquivo){
     char string[MAX];
     fflush(arquivo);
-    while(feof(arquivo) == 0){
+    int cont = 1;
+    Asterisco(50);
+    printf("\033[1;34mLIVROS:\033[m\n\n");
+    while(!feof(arquivo)){
         fgets(string, MAX, arquivo);
         if(!feof(arquivo))
-            printf("%s\n", string);
+            printf("%d- %s", cont, string);
+        cont++;
     }
-}
+    Asterisco(50);
 
+}
 
 void Imprime_Autor(FILE* arquivo, int i){
     char string[MAX];
     fflush(arquivo);
     int numero = 0;
-    while(numero<i && feof(arquivo) != EOF){
+    while(numero<i && !feof(arquivo)){
+        numero++;
         fgets(string, MAX, arquivo);
-        numero+=1;
     }
-    printf("Autor: %s\n", string);
+    printf("\033[1;34mAutor:\033[m %s", string);
 }
 
 void Imprime_Livro(FILE* arquivo, int i){
     char string[MAX];
     fflush(arquivo);
     int numero = 0;
-    while(numero<i && feof(arquivo) != EOF){
-        fgets(string, MAX, arquivo);
+    while(numero<i && !feof(arquivo)){
         numero++;
+        fgets(string, MAX, arquivo);
     }
-    printf("Livro: %s\n", string);
+    printf("\033[1;34mLivro: \033[m%s", string);
 }
 
 void Imprime_Genero(FILE* arquivo, int i){
     char string[MAX];
     fflush(arquivo);
     int numero = 0;
-    while(numero<i && feof(arquivo) != EOF){
-        fgets(string, MAX, arquivo);
+    while(numero<i && !feof(arquivo)){
         numero++;
+        fgets(string, MAX, arquivo);
     }
-    printf("Genero: %s\n", string);
+    printf("\033[1;34mGenero: \033[m%s", string);
+}
+void Asterisco(int n){
+    int i;
+    char a;
+    a = '*';
+    for(i=0; i<n; i++) printf("\033[1;33m%c\033[m",a);
+    printf("\n");
 }
