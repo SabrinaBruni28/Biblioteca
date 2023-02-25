@@ -35,6 +35,7 @@ int Adiciona_Livro(Arquivos* arquivo){
         printf("\033[1mDigite o genero: \033[m");
         fgets(gen, MAX, stdin);
         Insere(arquivo->genero, gen);
+        printf("\n\033[1;34m**** LIVRO ADICIONADO ****\n\033[m");
         return 1;
     }
     printf("\n\033[1;34m**** LIVRO RECONHECIDO ****\n\033[m");
